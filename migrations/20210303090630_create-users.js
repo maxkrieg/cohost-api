@@ -7,6 +7,9 @@ exports.up = async (knex) => {
     table.string('firstName');
     table.string('lastName');
     table.string('password').notNullable();
+    table.timestamp('createdAt', { precision: 6 }).defaultTo(knex.fn.now(6));
+    table.unique('handle');
+    table.unique('email');
   });
 };
 
