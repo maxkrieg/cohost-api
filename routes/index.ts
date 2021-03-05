@@ -1,10 +1,14 @@
 import express from 'express';
-import { userRouter } from './user';
+import { eventsRouter } from './events';
+import { itemsRouter } from './items';
+import { usersRouter } from './users';
 import { healthCheckRouter } from './health-check';
 
 const router = express.Router();
 
 router.use('/health-check', healthCheckRouter);
-router.use('/users', userRouter);
+router.use('/events', eventsRouter);
+router.use('/items', itemsRouter);
+router.use('/users', usersRouter);
 
 export default router;

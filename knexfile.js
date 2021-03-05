@@ -1,10 +1,7 @@
-require('ts-node/register');
-
 module.exports = {
-
   development: {
     client: 'postgresql',
-    connection: 'postgresql://postgres:postgres@127.0.0.1/cohostdb'
+    connection: 'postgresql://postgres:postgres@127.0.0.1/cohostdb',
   },
 
   // production: {
@@ -22,5 +19,4 @@ module.exports = {
   //     tableName: 'knex_migrations'
   //   }
   // }
-
 };
