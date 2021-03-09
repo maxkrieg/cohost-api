@@ -2,6 +2,12 @@ module.exports = {
   development: {
     client: 'postgresql',
     connection: 'postgresql://postgres:postgres@127.0.0.1/cohostdb',
+    migrations: {
+      directory: './db/migrations',
+    },
+    seeds: {
+      directory: './db/seeds',
+    },
   },
 
   // production: {
