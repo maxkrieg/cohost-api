@@ -1,11 +1,20 @@
+import 'reflect-metadata';
+import { buildSchema } from 'type-graphql';
 import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import morgan from 'morgan';
 import routes from './routes';
+import { ErrorInterceptor, logger } from './middleware';
+import { ApolloServer } from 'apollo-server-express';
+import { RequestContext } from './types';
 
-const PORT = 8000;
+// const PORT = 8000;
+
+const HOST = process.env.HOST
+const PORT = process.env.PORT
+const SERVER_ADDRESS = `${HOST}:${PORT}`
 
 const app = express();
 
@@ -29,3 +38,19 @@ app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
 app.listen(PORT, () => {
   console.log(`⚡️[server]: Server is running at https://localhost:${PORT}`);
 });
+
+const main = async () => {
+  const schema = await buildSchema({
+    resolvers: [__dirname + '/resolvers/**/*.ts'],
+    globalMiddlewares: [ErrorInterceptor, logger],
+  });
+
+  const server = new ApolloServer({
+    schema,
+    context: ({ req, res}: RequestContext) => ({ req, res})
+  })
+
+  const app = express()
+
+  app.use(cors({ credentials: true, origin: }))
+};

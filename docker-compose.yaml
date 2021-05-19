@@ -1,17 +1,45 @@
-version: "3.2"
+version: "3.7"
+
+x-postgres-creds: &postgres-creds
+  POSTGRES_DB: cohostdb
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
 
 services:
   postgres:
     image: postgres:13.0-alpine
     environment:
-      POSTGRES_DB: cohostdb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      <<: *postgres-creds
     ports:
       - "5432:5432"
     restart: "always"
     volumes:
       - cohost_postgres_db:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    restart: "always"
+    volumes:
+      - ./redis-data:/data
+
+  api:
+    command: ["npm", "start"]
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 4000
+      POSTGRES_HOST: postgres
+      SESSION_SECRET: dev-secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      <<: *postgres-creds
+    ports:
+      - 4000:4000
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./src:/app/src
 
 volumes:
   cohost_postgres_db:

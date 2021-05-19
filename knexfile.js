@@ -3,10 +3,10 @@ module.exports = {
     client: 'postgresql',
     connection: 'postgresql://postgres:postgres@127.0.0.1/cohostdb',
     migrations: {
-      directory: './db/migrations',
+      directory: './src/db/migrations',
     },
     seeds: {
-      directory: './db/seeds',
+      directory: './src/db/seeds',
     },
   },
 

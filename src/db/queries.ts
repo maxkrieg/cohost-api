@@ -1,7 +1,6 @@
 import argon2 from 'argon2';
 import knex from './client';
 import { UserSignUpPostData } from '../interfaces';
-import Knex from 'knex';
 
 // module.exports = {
 //   getAll(table: any) {

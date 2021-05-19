@@ -10,6 +10,7 @@ usersRouter.get('/', async (_, res) => {
 
 usersRouter.post('/signup', async (req, res) => {
   const user = await createUser(req.body);
+  res.json(user);
 });
 
 export { usersRouter };
