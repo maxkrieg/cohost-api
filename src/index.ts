@@ -1,45 +1,23 @@
 import 'reflect-metadata';
 import { buildSchema } from 'type-graphql';
-import express, { Request, Response, NextFunction } from 'express';
-import bodyParser from 'body-parser';
-import cookieParser from 'cookie-parser';
+import express from 'express';
 import cors from 'cors';
-import morgan from 'morgan';
-import routes from './routes';
+import session from 'express-session';
+import connectRedis from 'connect-redis';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ErrorInterceptor, logger } from './middleware';
 import { ApolloServer } from 'apollo-server-express';
 import { RequestContext } from './types';
+import { redis } from './redis';
 
-// const PORT = 8000;
+const SESSION_COOKIE_NAME = 'qid';
+const SESSION_SECRET = process.env.SESSION_SECRET || '';
+const HOST = process.env.HOST;
+const PORT = process.env.PORT;
+const SERVER_ADDRESS = `${HOST}:${PORT}`;
 
-const HOST = process.env.HOST
-const PORT = process.env.PORT
-const SERVER_ADDRESS = `${HOST}:${PORT}`
-
-const app = express();
-
-app.use(cors());
-app.use(cookieParser());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(morgan('combined'));
-
-app.get('/', (_, res) => res.send('Express + TypeScript Server'));
-app.use('/api', routes);
-
-app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-  res.status(err.status || 500);
-  res.json({
-    message: err.message,
-    error: (res.locals.error = req.app.get('env') === 'development' ? err : {}),
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`⚡️[server]: Server is running at https://localhost:${PORT}`);
-});
-
-const main = async () => {
+const startApp = async () => {
   const schema = await buildSchema({
     resolvers: [__dirname + '/resolvers/**/*.ts'],
     globalMiddlewares: [ErrorInterceptor, logger],
@@ -47,10 +25,52 @@ const main = async () => {
 
   const server = new ApolloServer({
     schema,
-    context: ({ req, res}: RequestContext) => ({ req, res})
-  })
+    context: ({ req, res }: RequestContext) => ({ req, res }),
+  });
 
-  const app = express()
+  const app = express();
 
-  app.use(cors({ credentials: true, origin: }))
+  app.use(cors({ credentials: true, origin: SERVER_ADDRESS }));
+
+  const RedisStore = connectRedis(session);
+  app.use(
+    session({
+      store: new RedisStore({ client: redis as any }),
+      name: SESSION_COOKIE_NAME,
+      secret: SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 60 * 24 * 7 * 365, // 7 years
+      },
+    }),
+  );
+
+  app.get('/health-check', (_, res) => {
+    const rawPkg = fs.readFileSync(path.join(process.cwd(), 'package.json'), {
+      encoding: 'utf8',
+    });
+    const pkg = JSON.parse(rawPkg);
+    res.send({
+      server: 'up',
+      version: pkg.version,
+    });
+  });
+
+  server.applyMiddleware({
+    app,
+    path: '/graphql',
+    cors: {
+      origin: true,
+      allowedHeaders: ['Authorization', 'Content-Type', SERVER_ADDRESS],
+    },
+  });
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server start at ${SERVER_ADDRESS}${server.graphqlPath} 🚀`);
+  });
 };
+
+startApp();

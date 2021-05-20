@@ -6,15 +6,15 @@ x-postgres-creds: &postgres-creds
   POSTGRES_PASSWORD: postgres
 
 services:
-  postgres:
-    image: postgres:13.0-alpine
-    environment:
-      <<: *postgres-creds
-    ports:
-      - "5432:5432"
-    restart: "always"
-    volumes:
-      - cohost_postgres_db:/var/lib/postgresql/data
+  # postgres:
+  #   image: postgres:13.0-alpine
+  #   environment:
+  #     <<: *postgres-creds
+  #   ports:
+  #     - "5432:5432"
+  #   restart: "always"
+  #   volumes:
+  #     - cohost_postgres_db:/var/lib/postgresql/data
 
   redis:
     image: redis:alpine
@@ -24,6 +24,8 @@ services:
 
   api:
     command: ["npm", "start"]
+    build:
+      context: .
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
@@ -32,14 +34,13 @@ services:
       SESSION_SECRET: dev-secret
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      <<: *postgres-creds
+      # <<: *postgres-creds
     ports:
       - 4000:4000
     depends_on:
-      - postgres
+      # - postgres
       - redis
     volumes:
       - ./src:/app/src
-
-volumes:
-  cohost_postgres_db:
+# volumes:
+#   cohost_postgres_db:
