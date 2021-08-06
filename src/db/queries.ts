@@ -13,6 +13,11 @@ export const getAll = async (table: string) => {
   return result;
 };
 
+export const findUserByEmail = async (email: string) => {
+  const result = await knex('users').where({ email }).first();
+  return result;
+};
+
 export const createUser = async ({
   email,
   password,

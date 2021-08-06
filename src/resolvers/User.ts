@@ -1,20 +1,8 @@
-import { Resolver, Query } from 'type-graphql';
-import { ObjectType, Field, ID } from 'type-graphql';
-
-@ObjectType()
-export class User {
-  @Field(() => ID)
-  id: number;
-
-  @Field()
-  firstName: string;
-
-  @Field()
-  lastName: string;
-
-  @Field()
-  email: string;
-}
+import { Resolver, Query, Mutation, Arg, Ctx } from 'type-graphql'
+import { User } from '../schema'
+import { createUser } from '../db/users'
+import { RequestContext } from '../types'
+import { RegisterInput } from '../validators/RegisterInput'
 
 @Resolver()
 export class UserResolver {
@@ -25,7 +13,17 @@ export class UserResolver {
       firstName: 'Max',
       lastName: 'Krieg',
       email: 'max@krieg.com',
-    };
-    return user;
+    }
+    return user
+  }
+
+  @Mutation(() => User)
+  async register(
+    @Arg('data') { email, firstName, lastName, password }: RegisterInput,
+    @Ctx() ctx: RequestContext,
+  ): Promise<User> {
+    const user = await createUser({ email, password, firstName, lastName })
+    console.log({ ctx })
+    return user
   }
 }
